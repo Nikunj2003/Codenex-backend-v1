@@ -1,3 +1,14 @@
 spring:
   application:
     name: codenex
+
+# SpringDoc OpenAPI / Swagger UI Configuration
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+  swagger-ui:
+    enabled: true
+    path: /api/docs
+    operations-sorter: method
+    tags-sorter: alpha
