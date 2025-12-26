@@ -4,7 +4,9 @@ import com.nikunj.codenex.dto.member.request.InviteMemberRequest;
 import com.nikunj.codenex.dto.member.request.UpdateMemberRoleRequest;
 import com.nikunj.codenex.dto.member.response.MemberResponse;
 import com.nikunj.codenex.service.ProjectMemberService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +17,10 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/projects/{projectId}/members")
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class ProjectMemberController {
 
-    private final ProjectMemberService projectMemberService;
+    ProjectMemberService projectMemberService;
 
     @GetMapping
     public ResponseEntity<List<MemberResponse>> getMembers(@PathVariable Long projectId) {
@@ -35,7 +38,7 @@ public class ProjectMemberController {
 
     @PatchMapping("/{memberId}")
     public ResponseEntity<MemberResponse> updateMemberRole(@PathVariable Long projectId, @PathVariable Long memberId,
-            @RequestBody UpdateMemberRoleRequest request) {
+    @RequestBody UpdateMemberRoleRequest request) {
         Long userId = 1L; // TODO: Get user ID from Spring Security later
         return ResponseEntity.ok(projectMemberService.updateMemberRole(userId, projectId, memberId, request));
     }

@@ -7,7 +7,9 @@ import com.nikunj.codenex.dto.subscription.response.PortalResponse;
 import com.nikunj.codenex.dto.subscription.response.SubscriptionResponse;
 import com.nikunj.codenex.service.PlanService;
 import com.nikunj.codenex.service.SubscriptionService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,10 +18,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class BillingController {
 
-    private final PlanService planService;
-    private final SubscriptionService subscriptionService;
+    PlanService planService;
+    SubscriptionService subscriptionService;
 
     @GetMapping("/plans")
     public ResponseEntity<List<PlanResponse>> getPlans() {

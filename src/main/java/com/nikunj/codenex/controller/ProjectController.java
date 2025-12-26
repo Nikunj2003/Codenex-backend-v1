@@ -4,8 +4,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nikunj.codenex.service.ProjectService;
-
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 
@@ -25,8 +26,9 @@ import com.nikunj.codenex.dto.project.response.ProjectResponse;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/projects")
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class ProjectController {
-    private final ProjectService projectService;
+    ProjectService projectService;
 
     @GetMapping
     public ResponseEntity<List<ProjectSummaryResponce>> getMyProjects() {
