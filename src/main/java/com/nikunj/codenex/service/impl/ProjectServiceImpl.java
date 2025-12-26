@@ -18,6 +18,7 @@ import com.nikunj.codenex.mapper.ProjectMapper;
 import com.nikunj.codenex.repository.ProjectRepository;
 import com.nikunj.codenex.repository.UserRepository;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -39,7 +40,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .owner(owner)
                 .isPublic(false)
                 .build();
-        
+
         project = projectRepository.save(project);
 
         return projectMapper.toProjectResponse(project);
@@ -52,16 +53,39 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public ProjectResponse getUserProjectById(Long userId, Long projectId) {
-        return null;
+        Project project = getAccessibleProjectById(userId, projectId);
+        return projectMapper.toProjectResponse(project);
     }
 
     @Override
     public ProjectResponse updateProject(Long userId, Long projectId, ProjectRequest request) {
-        return null;
+        Project project = getAccessibleProjectById(userId, projectId);
+
+        if (!project.getOwner().getId().equals(userId)) {
+            throw new RuntimeException("User is not authorized to update this project");
+        }
+
+        project.setName(request.name());
+
+        project = projectRepository.save(project);
+
+        return projectMapper.toProjectResponse(project);
     }
 
     @Override
     public void softDelete(Long userId, Long projectId) {
+        Project project = getAccessibleProjectById(userId, projectId);
 
+        if (!project.getOwner().getId().equals(userId)) {
+            throw new RuntimeException("User is not authorized to delete this project");
+        }
+
+        project.setDeletedAt(Instant.now());
+        projectRepository.save(project);
+    }
+
+    private Project getAccessibleProjectById(Long userId, Long projectId) {
+        return projectRepository.findAccessibleProjectById(userId, projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
     }
 }
