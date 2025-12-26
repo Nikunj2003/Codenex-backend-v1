@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Database ###
+/postgres_data/
+
+### macOS ###
+.DS_Store

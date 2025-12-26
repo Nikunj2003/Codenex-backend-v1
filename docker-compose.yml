@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: codenex-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: codenex
+      POSTGRES_USER: codenex
+      POSTGRES_PASSWORD: codenex
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
