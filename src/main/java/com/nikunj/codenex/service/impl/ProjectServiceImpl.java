@@ -18,7 +18,6 @@ import com.nikunj.codenex.mapper.ProjectMapper;
 import com.nikunj.codenex.repository.ProjectRepository;
 import com.nikunj.codenex.repository.UserRepository;
 
-import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -48,7 +47,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public List<ProjectSummaryResponce> getUserProjects(Long userId) {
-        return Collections.emptyList();
+        return projectMapper.toProjectSummaryResponceList(projectRepository.findAllAccessibleByUser(userId));
     }
 
     @Override
