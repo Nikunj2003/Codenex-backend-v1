@@ -13,6 +13,6 @@ public class PlanServiceImpl implements PlanService {
 
     @Override
     public List<PlanResponse> getAllActivePlans() {
-        return null;
+        return List.of();
     }
 }
