@@ -4,10 +4,9 @@ import com.nikunj.codenex.enums.ProjectRole;
 import java.time.Instant;
 
 public record MemberResponse(
-        Long id,
+        Long userId,
         String email,
         String name,
-        String avatarUrl,
-        ProjectRole role,
+        ProjectRole projectRole,
         Instant invitedAt) {
 }

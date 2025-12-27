@@ -7,8 +7,11 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
+import jakarta.persistence.Embeddable;
+
 @Data
 @Builder
+@Embeddable
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProjectMemberId implements Serializable {
