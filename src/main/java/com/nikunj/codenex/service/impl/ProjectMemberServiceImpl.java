@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.ArrayList;
 
 import java.util.List;
@@ -75,6 +76,7 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
                 .project(project)
                 .user(invitee)
                 .projectRole(request.role())
+                .invitedAt(Instant.now())
                 .build();
         
         projectMemberRepository.save(projectMember);
