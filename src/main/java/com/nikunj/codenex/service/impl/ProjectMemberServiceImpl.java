@@ -11,6 +11,10 @@ import com.nikunj.codenex.entity.ProjectMemberId;
 import com.nikunj.codenex.entity.User;
 import com.nikunj.codenex.enums.InviteAction;
 import com.nikunj.codenex.enums.ProjectRole;
+import com.nikunj.codenex.error.BadRequestException;
+import com.nikunj.codenex.error.ConflictException;
+import com.nikunj.codenex.error.ForbiddenException;
+import com.nikunj.codenex.error.ResourceNotFoundException;
 import com.nikunj.codenex.mapper.ProjectMemberMapper;
 import com.nikunj.codenex.repository.ProjectMemberRepository;
 import com.nikunj.codenex.repository.ProjectRepository;
@@ -59,24 +63,24 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
         Project project = getAccessibleProjectById(userId, projectId);
 
         if (!project.getOwner().getId().equals(userId)) {
-            throw new RuntimeException("User is not the owner of the project");
+            throw new ForbiddenException("Only the project owner can invite members");
         }
 
         User invitee = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", request.email()));
 
         if (invitee.getId().equals(userId)) {
-            throw new RuntimeException("User cannot invite themselves");
+            throw new BadRequestException("You cannot invite yourself to the project");
         }
 
         if (request.role() == ProjectRole.OWNER) {
-            throw new RuntimeException("Cannot assign OWNER role to a member");
+            throw new BadRequestException("Cannot assign OWNER role to a member");
         }
 
         ProjectMemberId projectMemberId = new ProjectMemberId(projectId, invitee.getId());
 
         if (projectMemberRepository.existsById(projectMemberId)) {
-            throw new RuntimeException("User is already a member of the project");
+            throw new ConflictException("User is already a member of this project");
         }
 
         ProjectMember projectMember = ProjectMember.builder()
@@ -98,21 +102,21 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
         Project project = getAccessibleProjectById(userId, projectId);
 
         if (!project.getOwner().getId().equals(userId)) {
-            throw new RuntimeException("User is not the owner of the project");
+            throw new ForbiddenException("Only the project owner can update member roles");
         }
 
         if (memberId.equals(userId)) {
-            throw new RuntimeException("Owner cannot update their own role");
+            throw new BadRequestException("Owner cannot update their own role");
         }
 
         if (request.role() == ProjectRole.OWNER) {
-            throw new RuntimeException("Cannot assign OWNER role to a member");
+            throw new BadRequestException("Cannot assign OWNER role to a member");
         }
 
         ProjectMemberId projectMemberId = new ProjectMemberId(projectId, memberId);
 
         ProjectMember projectMember = projectMemberRepository.findById(projectMemberId)
-                .orElseThrow(() -> new RuntimeException("Member not found in the project"));
+                .orElseThrow(() -> new ResourceNotFoundException("ProjectMember", memberId.toString()));
 
         if (projectMember.getProjectRole() == request.role()) {
             return projectMemberMapper.toProjectMemberResponse(projectMember);
@@ -129,17 +133,17 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
         Project project = getAccessibleProjectById(userId, projectId);
 
         if (!project.getOwner().getId().equals(userId)) {
-            throw new RuntimeException("User is not the owner of the project");
+            throw new ForbiddenException("Only the project owner can remove members");
         }
 
         if (memberId.equals(userId)) {
-            throw new RuntimeException("Owner cannot remove themselves from the project");
+            throw new BadRequestException("Owner cannot remove themselves from the project");
         }
 
         ProjectMemberId projectMemberId = new ProjectMemberId(projectId, memberId);
 
         if (!projectMemberRepository.existsById(projectMemberId)) {
-            throw new RuntimeException("Member not found in the project");
+            throw new ResourceNotFoundException("ProjectMember", memberId.toString());
         }
 
         projectMemberRepository.deleteById(projectMemberId);
@@ -148,19 +152,19 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     @Override
     public MemberResponse respondToInvite(Long userId, Long projectId, InviteActionRequest request) {
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project", projectId.toString()));
 
         if (project.getOwner().getId().equals(userId)) {
-            throw new RuntimeException("Owner cannot respond to invite");
+            throw new BadRequestException("Owner cannot respond to invite");
         }
 
         ProjectMemberId projectMemberId = new ProjectMemberId(projectId, userId);
 
         ProjectMember projectMember = projectMemberRepository.findById(projectMemberId)
-                .orElseThrow(() -> new RuntimeException("No pending invite found for this project"));
+                .orElseThrow(() -> new ResourceNotFoundException("Invite", "No pending invite found for this project"));
 
         if (projectMember.getAcceptedAt() != null) {
-            throw new RuntimeException("Invite has already been accepted");
+            throw new ConflictException("Invite has already been accepted");
         }
 
         if (request.action() == InviteAction.ACCEPT) {
@@ -183,19 +187,19 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     @Override
     public void leaveProject(Long userId, Long projectId) {
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project", projectId.toString()));
 
         if (project.getOwner().getId().equals(userId)) {
-            throw new RuntimeException("Owner cannot leave their own project");
+            throw new BadRequestException("Owner cannot leave their own project");
         }
 
         ProjectMemberId projectMemberId = new ProjectMemberId(projectId, userId);
 
         ProjectMember projectMember = projectMemberRepository.findById(projectMemberId)
-                .orElseThrow(() -> new RuntimeException("User is not a member of this project"));
+                .orElseThrow(() -> new ResourceNotFoundException("ProjectMember", "You are not a member of this project"));
 
         if (projectMember.getAcceptedAt() == null) {
-            throw new RuntimeException("Cannot leave a project with a pending invite. Please reject the invite instead.");
+            throw new BadRequestException("Cannot leave a project with a pending invite. Please reject the invite instead.");
         }
 
         projectMemberRepository.deleteById(projectMemberId);
@@ -203,6 +207,6 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
 
     private Project getAccessibleProjectById(Long userId, Long projectId) {
         return projectRepository.findAccessibleProjectById(userId, projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project", projectId.toString()));
     }
 }

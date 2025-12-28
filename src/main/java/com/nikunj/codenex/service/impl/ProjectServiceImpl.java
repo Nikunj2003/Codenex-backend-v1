@@ -3,6 +3,8 @@ package com.nikunj.codenex.service.impl;
 import org.springframework.stereotype.Service;
 
 import com.nikunj.codenex.service.ProjectService;
+import com.nikunj.codenex.error.ForbiddenException;
+import com.nikunj.codenex.error.ResourceNotFoundException;
 
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -33,7 +35,8 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public ProjectResponse createProject(Long userId, ProjectRequest request) {
-        User owner = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        User owner = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId.toString()));
 
         Project project = Project.builder()
                 .name(request.name())
@@ -62,7 +65,7 @@ public class ProjectServiceImpl implements ProjectService {
         Project project = getAccessibleProjectById(userId, projectId);
 
         if (!project.getOwner().getId().equals(userId)) {
-            throw new RuntimeException("User is not authorized to update this project");
+            throw new ForbiddenException("You are not authorized to update this project");
         }
 
         project.setName(request.name());
@@ -77,7 +80,7 @@ public class ProjectServiceImpl implements ProjectService {
         Project project = getAccessibleProjectById(userId, projectId);
 
         if (!project.getOwner().getId().equals(userId)) {
-            throw new RuntimeException("User is not authorized to delete this project");
+            throw new ForbiddenException("You are not authorized to delete this project");
         }
 
         project.setDeletedAt(Instant.now());
@@ -86,6 +89,6 @@ public class ProjectServiceImpl implements ProjectService {
 
     private Project getAccessibleProjectById(Long userId, Long projectId) {
         return projectRepository.findAccessibleProjectById(userId, projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project", projectId.toString()));
     }
 }
