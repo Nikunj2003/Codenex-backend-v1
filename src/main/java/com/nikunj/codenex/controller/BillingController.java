@@ -13,6 +13,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+
 import java.util.List;
 
 @RestController
@@ -36,7 +38,7 @@ public class BillingController {
     }
 
     @PostMapping("/stripe/checkout")
-    public ResponseEntity<CheckoutResponse> createCheckoutSession(@RequestBody CheckoutRequest request) {
+    public ResponseEntity<CheckoutResponse> createCheckoutSession(@Valid @RequestBody CheckoutRequest request) {
         Long userId = 1L; // TODO: Get from security context
         return ResponseEntity.ok(subscriptionService.createCheckoutSessionUrl(userId, request));
     }

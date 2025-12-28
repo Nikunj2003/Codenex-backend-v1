@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import jakarta.validation.Valid;
+
 import com.nikunj.codenex.dto.project.response.ProjectSummaryResponce;
 import com.nikunj.codenex.dto.project.request.ProjectRequest;
 import com.nikunj.codenex.dto.project.response.ProjectResponse;
@@ -43,14 +45,14 @@ public class ProjectController {
     }
 
     @PostMapping
-    public ResponseEntity<ProjectResponse> createProject(@RequestBody ProjectRequest request) {
+    public ResponseEntity<ProjectResponse> createProject(@Valid @RequestBody ProjectRequest request) {
         Long userId = 1L; // TODO: Get user ID from Spring Security later
         return ResponseEntity.status(HttpStatus.CREATED).body(projectService.createProject(userId, request));
     }
 
     @PatchMapping("/{projectId}")
     public ResponseEntity<ProjectResponse> updateProject(@PathVariable Long projectId,
-            @RequestBody ProjectRequest request) {
+            @Valid @RequestBody ProjectRequest request) {
         Long userId = 1L; // TODO: Get user ID from Spring Security later
         return ResponseEntity.ok(projectService.updateProject(userId, projectId, request));
     }
