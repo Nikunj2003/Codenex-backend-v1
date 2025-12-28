@@ -1,5 +1,6 @@
 package com.nikunj.codenex.controller;
 
+import com.nikunj.codenex.dto.member.request.InviteActionRequest;
 import com.nikunj.codenex.dto.member.request.InviteMemberRequest;
 import com.nikunj.codenex.dto.member.request.UpdateMemberRoleRequest;
 import com.nikunj.codenex.dto.member.response.MemberResponse;
@@ -47,6 +48,24 @@ public class ProjectMemberController {
     public ResponseEntity<Void> removeMember(@PathVariable Long projectId, @PathVariable Long memberId) {
         Long userId = 1L; // TODO: Get user ID from Spring Security later
         projectMemberService.removeProjectMember(userId, projectId, memberId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/invite-response")
+    public ResponseEntity<MemberResponse> respondToInvite(@PathVariable Long projectId,
+            @RequestBody InviteActionRequest request) {
+        Long userId = 1L; // TODO: Get user ID from Spring Security later
+        MemberResponse response = projectMemberService.respondToInvite(userId, projectId, request);
+        if (response == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> leaveProject(@PathVariable Long projectId) {
+        Long userId = 1L; // TODO: Get user ID from Spring Security later
+        projectMemberService.leaveProject(userId, projectId);
         return ResponseEntity.noContent().build();
     }
 }

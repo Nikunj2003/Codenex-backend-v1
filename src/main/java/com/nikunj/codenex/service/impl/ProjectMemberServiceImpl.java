@@ -1,12 +1,15 @@
 package com.nikunj.codenex.service.impl;
 
+import com.nikunj.codenex.dto.member.request.InviteActionRequest;
 import com.nikunj.codenex.dto.member.request.InviteMemberRequest;
 import com.nikunj.codenex.dto.member.request.UpdateMemberRoleRequest;
 import com.nikunj.codenex.dto.member.response.MemberResponse;
+import com.nikunj.codenex.dto.member.response.PendingInviteResponse;
 import com.nikunj.codenex.entity.Project;
 import com.nikunj.codenex.entity.ProjectMember;
 import com.nikunj.codenex.entity.ProjectMemberId;
 import com.nikunj.codenex.entity.User;
+import com.nikunj.codenex.enums.InviteAction;
 import com.nikunj.codenex.enums.ProjectRole;
 import com.nikunj.codenex.mapper.ProjectMemberMapper;
 import com.nikunj.codenex.repository.ProjectMemberRepository;
@@ -137,6 +140,62 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
 
         if (!projectMemberRepository.existsById(projectMemberId)) {
             throw new RuntimeException("Member not found in the project");
+        }
+
+        projectMemberRepository.deleteById(projectMemberId);
+    }
+
+    @Override
+    public MemberResponse respondToInvite(Long userId, Long projectId, InviteActionRequest request) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        if (project.getOwner().getId().equals(userId)) {
+            throw new RuntimeException("Owner cannot respond to invite");
+        }
+
+        ProjectMemberId projectMemberId = new ProjectMemberId(projectId, userId);
+
+        ProjectMember projectMember = projectMemberRepository.findById(projectMemberId)
+                .orElseThrow(() -> new RuntimeException("No pending invite found for this project"));
+
+        if (projectMember.getAcceptedAt() != null) {
+            throw new RuntimeException("Invite has already been accepted");
+        }
+
+        if (request.action() == InviteAction.ACCEPT) {
+            projectMember.setAcceptedAt(Instant.now());
+            projectMemberRepository.save(projectMember);
+            return projectMemberMapper.toProjectMemberResponse(projectMember);
+        } else {
+            projectMemberRepository.deleteById(projectMemberId);
+            return null;
+        }
+    }
+
+    @Override
+    public List<PendingInviteResponse> getPendingInvites(Long userId) {
+        return projectMemberRepository.findByUserIdAndAcceptedAtIsNull(userId).stream()
+                .map(projectMemberMapper::toPendingInviteResponse)
+                .toList();
+    }
+
+    @Override
+    public void leaveProject(Long userId, Long projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        if (project.getOwner().getId().equals(userId)) {
+            throw new RuntimeException("Owner cannot leave their own project");
+        }
+
+        ProjectMemberId projectMemberId = new ProjectMemberId(projectId, userId);
+
+        ProjectMember projectMember = projectMemberRepository.findById(projectMemberId)
+                .orElseThrow(() -> new RuntimeException("User is not a member of this project"));
+
+        if (projectMember.getAcceptedAt() == null) {
+            throw new RuntimeException("Cannot leave a project with a pending invite. Please reject the invite instead.");
         }
 
         projectMemberRepository.deleteById(projectMemberId);

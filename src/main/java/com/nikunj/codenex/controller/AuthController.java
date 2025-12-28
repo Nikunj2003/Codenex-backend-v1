@@ -11,12 +11,16 @@ import com.nikunj.codenex.dto.auth.request.LoginRequest;
 import com.nikunj.codenex.dto.auth.request.SignupRequest;
 import com.nikunj.codenex.dto.auth.response.AuthResponse;
 import com.nikunj.codenex.dto.auth.response.UserProfileResponse;
+import com.nikunj.codenex.dto.member.response.PendingInviteResponse;
 import com.nikunj.codenex.service.AuthService;
+import com.nikunj.codenex.service.ProjectMemberService;
 import com.nikunj.codenex.service.UserService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,6 +29,7 @@ import lombok.experimental.FieldDefaults;
 public class AuthController {
     AuthService authService;
     UserService userService;
+    ProjectMemberService projectMemberService;
 
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> signup(@RequestBody SignupRequest request) {
@@ -40,5 +45,11 @@ public class AuthController {
     public ResponseEntity<UserProfileResponse> getProfile() {
         Long userId = 1L; // TODO: Get user ID from Spring Security later
         return ResponseEntity.ok(userService.getProfile(userId));
+    }
+
+    @GetMapping("/me/invites")
+    public ResponseEntity<List<PendingInviteResponse>> getPendingInvites() {
+        Long userId = 1L; // TODO: Get user ID from Spring Security later
+        return ResponseEntity.ok(projectMemberService.getPendingInvites(userId));
     }
 }

@@ -8,5 +8,7 @@ public record MemberResponse(
         String email,
         String name,
         ProjectRole projectRole,
-        Instant invitedAt) {
+        Instant invitedAt,
+        Instant acceptedAt,
+        Boolean isAccepted) {
 }
