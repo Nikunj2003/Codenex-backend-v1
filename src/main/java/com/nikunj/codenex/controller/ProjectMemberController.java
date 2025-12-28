@@ -38,15 +38,15 @@ public class ProjectMemberController {
 
     @PatchMapping("/{memberId}")
     public ResponseEntity<MemberResponse> updateMemberRole(@PathVariable Long projectId, @PathVariable Long memberId,
-    @RequestBody UpdateMemberRoleRequest request) {
+            @RequestBody UpdateMemberRoleRequest request) {
         Long userId = 1L; // TODO: Get user ID from Spring Security later
         return ResponseEntity.ok(projectMemberService.updateMemberRole(userId, projectId, memberId, request));
     }
 
     @DeleteMapping("/{memberId}")
-    public ResponseEntity<Void> deleteMember(@PathVariable Long projectId, @PathVariable Long memberId) {
+    public ResponseEntity<Void> removeMember(@PathVariable Long projectId, @PathVariable Long memberId) {
         Long userId = 1L; // TODO: Get user ID from Spring Security later
-        projectMemberService.deleteProjectMember(userId, projectId, memberId);
+        projectMemberService.removeProjectMember(userId, projectId, memberId);
         return ResponseEntity.noContent().build();
     }
 }
