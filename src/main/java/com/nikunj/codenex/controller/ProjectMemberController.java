@@ -2,6 +2,7 @@ package com.nikunj.codenex.controller;
 
 import com.nikunj.codenex.dto.member.request.InviteActionRequest;
 import com.nikunj.codenex.dto.member.request.InviteMemberRequest;
+import com.nikunj.codenex.dto.member.request.TransferOwnershipRequest;
 import com.nikunj.codenex.dto.member.request.UpdateMemberRoleRequest;
 import com.nikunj.codenex.dto.member.response.MemberResponse;
 import com.nikunj.codenex.service.ProjectMemberService;
@@ -145,5 +146,24 @@ public class ProjectMemberController {
         Long userId = 1L; // TODO: Get user ID from Spring Security later
         projectMemberService.leaveProject(userId, projectId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Transfer ownership", description = "Transfer project ownership to another member (owner only)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Ownership transferred successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid request (e.g., transferring to self or member with pending invite)",
+                content = @Content(schema = @Schema(ref = "#/components/schemas/ValidationApiError"))),
+        @ApiResponse(responseCode = "403", description = "Not authorized to transfer ownership",
+                content = @Content(schema = @Schema(ref = "#/components/schemas/ApiError"))),
+        @ApiResponse(responseCode = "404", description = "Project or member not found",
+                content = @Content(schema = @Schema(ref = "#/components/schemas/ApiError"))),
+        @ApiResponse(responseCode = "500", description = "Internal server error",
+                content = @Content(schema = @Schema(ref = "#/components/schemas/ApiError")))
+    })
+    @PostMapping("/transfer-ownership")
+    public ResponseEntity<MemberResponse> transferOwnership(@PathVariable Long projectId,
+            @Valid @RequestBody TransferOwnershipRequest request) {
+        Long userId = 1L; // TODO: Get user ID from Spring Security later
+        return ResponseEntity.ok(projectMemberService.transferOwnership(userId, projectId, request));
     }
 }

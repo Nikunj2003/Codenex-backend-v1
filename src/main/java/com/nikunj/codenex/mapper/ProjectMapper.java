@@ -8,11 +8,18 @@ import org.mapstruct.Mapping;
 import com.nikunj.codenex.dto.project.response.ProjectResponse;
 import com.nikunj.codenex.dto.project.response.ProjectSummaryResponce;
 import com.nikunj.codenex.entity.Project;
+import com.nikunj.codenex.entity.User;
 
 @Mapper(componentModel = "spring")
 public interface ProjectMapper {
 
-    ProjectResponse toProjectResponse(Project project);
+    @Mapping(source = "project.id", target = "id")
+    @Mapping(source = "project.name", target = "name")
+    @Mapping(source = "project.isPublic", target = "isPublic")
+    @Mapping(source = "project.createdAt", target = "createdAt")
+    @Mapping(source = "project.updatedAt", target = "updatedAt")
+    @Mapping(source = "owner", target = "owner")
+    ProjectResponse toProjectResponse(Project project, User owner);
 
     @Mapping(source = "name", target = "projectName")
     ProjectSummaryResponce toProjectSummaryResponce(Project project);

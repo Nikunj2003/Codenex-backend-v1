@@ -2,6 +2,7 @@ package com.nikunj.codenex.service;
 
 import com.nikunj.codenex.dto.member.request.InviteActionRequest;
 import com.nikunj.codenex.dto.member.request.InviteMemberRequest;
+import com.nikunj.codenex.dto.member.request.TransferOwnershipRequest;
 import com.nikunj.codenex.dto.member.request.UpdateMemberRoleRequest;
 import com.nikunj.codenex.dto.member.response.MemberResponse;
 import com.nikunj.codenex.dto.member.response.PendingInviteResponse;
@@ -21,4 +22,6 @@ public interface ProjectMemberService {
     List<PendingInviteResponse> getPendingInvites(Long userId);
 
     void leaveProject(Long userId, Long projectId);
+
+    MemberResponse transferOwnership(Long userId, Long projectId, TransferOwnershipRequest request);
 }
