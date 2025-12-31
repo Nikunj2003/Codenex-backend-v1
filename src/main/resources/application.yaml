@@ -1,6 +1,18 @@
+server:
+  port: 8000
+
 spring:
   application:
     name: codenex
+
+  # DevTools Configuration
+  devtools:
+    restart:
+      enabled: true
+      poll-interval: 1s
+      quiet-period: 400ms
+    livereload:
+      enabled: true
 
   datasource:
     url: jdbc:postgresql://localhost:5432/codenex
