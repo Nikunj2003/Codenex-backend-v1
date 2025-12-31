@@ -23,6 +23,11 @@ import com.nikunj.codenex.repository.UserRepository;
 import java.time.Instant;
 import java.util.List;
 
+import com.nikunj.codenex.entity.ProjectMember;
+import com.nikunj.codenex.entity.ProjectMemberId;
+import com.nikunj.codenex.enums.ProjectRole;
+import com.nikunj.codenex.repository.ProjectMemberRepository;
+
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
@@ -31,6 +36,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     ProjectRepository projectRepository;
     UserRepository userRepository;
+    ProjectMemberRepository projectMemberRepository;
     ProjectMapper projectMapper;
 
     @Override
@@ -40,13 +46,23 @@ public class ProjectServiceImpl implements ProjectService {
 
         Project project = Project.builder()
                 .name(request.name())
-                .owner(owner)
                 .isPublic(false)
                 .build();
 
         project = projectRepository.save(project);
 
-        return projectMapper.toProjectResponse(project);
+        ProjectMember ownerMember = ProjectMember.builder()
+                .id(new ProjectMemberId(project.getId(), owner.getId()))
+                .project(project)
+                .user(owner)
+                .projectRole(ProjectRole.OWNER)
+                .invitedAt(Instant.now())
+                .acceptedAt(Instant.now())
+                .build();
+
+        projectMemberRepository.save(ownerMember);
+
+        return projectMapper.toProjectResponse(project, ownerMember);
     }
 
     @Override
@@ -57,14 +73,16 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public ProjectResponse getUserProjectById(Long userId, Long projectId) {
         Project project = getAccessibleProjectById(userId, projectId);
-        return projectMapper.toProjectResponse(project);
+        ProjectMember ownerMember = projectMemberRepository.findOwnerByProjectId(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project Owner", projectId.toString()));
+        return projectMapper.toProjectResponse(project, ownerMember);
     }
 
     @Override
     public ProjectResponse updateProject(Long userId, Long projectId, ProjectRequest request) {
         Project project = getAccessibleProjectById(userId, projectId);
 
-        if (!project.getOwner().getId().equals(userId)) {
+        if (!isProjectOwner(userId, projectId)) {
             throw new ForbiddenException("You are not authorized to update this project");
         }
 
@@ -72,14 +90,17 @@ public class ProjectServiceImpl implements ProjectService {
 
         project = projectRepository.save(project);
 
-        return projectMapper.toProjectResponse(project);
+        ProjectMember ownerMember = projectMemberRepository.findOwnerByProjectId(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project Owner", projectId.toString()));
+
+        return projectMapper.toProjectResponse(project, ownerMember);
     }
 
     @Override
     public void softDelete(Long userId, Long projectId) {
         Project project = getAccessibleProjectById(userId, projectId);
 
-        if (!project.getOwner().getId().equals(userId)) {
+        if (!isProjectOwner(userId, projectId)) {
             throw new ForbiddenException("You are not authorized to delete this project");
         }
 
@@ -90,5 +111,9 @@ public class ProjectServiceImpl implements ProjectService {
     private Project getAccessibleProjectById(Long userId, Long projectId) {
         return projectRepository.findAccessibleProjectById(userId, projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", projectId.toString()));
+    }
+
+    private boolean isProjectOwner(Long userId, Long projectId) {
+        return projectMemberRepository.findOwnershipByProjectAndUser(projectId, userId).isPresent();
     }
 }

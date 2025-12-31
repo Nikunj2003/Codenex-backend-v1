@@ -28,9 +28,12 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.ArrayList;
 
 import java.util.List;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -45,24 +48,19 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
 
     @Override
     public List<MemberResponse> getProjectMembers(Long userId, Long projectId) {
-        Project project = getAccessibleProjectById(userId, projectId);
+        // Ensure user has access
+        getAccessibleProjectById(userId, projectId);
 
-        List<MemberResponse> memberResponseList = new ArrayList<>();
-
-        memberResponseList.add(projectMemberMapper.toMemberResponseFromOwner(project.getOwner()));
-
-        memberResponseList.addAll(projectMemberRepository.findByProjectId(projectId).stream()
+        return projectMemberRepository.findByProjectId(projectId).stream()
                 .map(projectMemberMapper::toProjectMemberResponse)
-                .toList());
-
-        return memberResponseList;
+                .toList();
     }
 
     @Override
     public MemberResponse inviteMember(Long userId, Long projectId, InviteMemberRequest request) {
         Project project = getAccessibleProjectById(userId, projectId);
 
-        if (!project.getOwner().getId().equals(userId)) {
+        if (!isProjectOwner(userId, projectId)) {
             throw new ForbiddenException("Only the project owner can invite members");
         }
 
@@ -99,9 +97,9 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     @Override
     public MemberResponse updateMemberRole(Long userId, Long projectId, Long memberId,
             UpdateMemberRoleRequest request) {
-        Project project = getAccessibleProjectById(userId, projectId);
+        getAccessibleProjectById(userId, projectId);
 
-        if (!project.getOwner().getId().equals(userId)) {
+        if (!isProjectOwner(userId, projectId)) {
             throw new ForbiddenException("Only the project owner can update member roles");
         }
 
@@ -130,9 +128,9 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
 
     @Override
     public void removeProjectMember(Long userId, Long projectId, Long memberId) {
-        Project project = getAccessibleProjectById(userId, projectId);
+        getAccessibleProjectById(userId, projectId);
 
-        if (!project.getOwner().getId().equals(userId)) {
+        if (!isProjectOwner(userId, projectId)) {
             throw new ForbiddenException("Only the project owner can remove members");
         }
 
@@ -151,10 +149,8 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
 
     @Override
     public MemberResponse respondToInvite(Long userId, Long projectId, InviteActionRequest request) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new ResourceNotFoundException("Project", projectId.toString()));
 
-        if (project.getOwner().getId().equals(userId)) {
+        if (isProjectOwner(userId, projectId)) {
             throw new BadRequestException("Owner cannot respond to invite");
         }
 
@@ -179,17 +175,28 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
 
     @Override
     public List<PendingInviteResponse> getPendingInvites(Long userId) {
-        return projectMemberRepository.findByUserIdAndAcceptedAtIsNull(userId).stream()
-                .map(projectMemberMapper::toPendingInviteResponse)
+        List<ProjectMember> pendingInvites = projectMemberRepository.findByUserIdAndAcceptedAtIsNull(userId);
+
+        if (pendingInvites.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> projectIds = pendingInvites.stream()
+                .map(pm -> pm.getProject().getId())
+                .toList();
+
+        Map<Long, ProjectMember> ownersMap = projectMemberRepository.findOwnersByProjectIds(projectIds).stream()
+                .collect(Collectors.toMap(pm -> pm.getProject().getId(), pm -> pm));
+
+        return pendingInvites.stream()
+                .map(pm -> projectMemberMapper.toPendingInviteResponse(pm, ownersMap.get(pm.getProject().getId())))
                 .toList();
     }
 
     @Override
     public void leaveProject(Long userId, Long projectId) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new ResourceNotFoundException("Project", projectId.toString()));
 
-        if (project.getOwner().getId().equals(userId)) {
+        if (isProjectOwner(userId, projectId)) {
             throw new BadRequestException("Owner cannot leave their own project");
         }
 
@@ -208,5 +215,9 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     private Project getAccessibleProjectById(Long userId, Long projectId) {
         return projectRepository.findAccessibleProjectById(userId, projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", projectId.toString()));
+    }
+
+    private boolean isProjectOwner(Long userId, Long projectId) {
+        return projectMemberRepository.findOwnershipByProjectAndUser(projectId, userId).isPresent();
     }
 }
