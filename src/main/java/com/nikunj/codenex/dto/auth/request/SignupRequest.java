@@ -11,7 +11,7 @@ public record SignupRequest(
 
     @Email
     @NotBlank
-    String email,
+    String username,
 
     @Size(min = 4, max = 50)
     @NotBlank

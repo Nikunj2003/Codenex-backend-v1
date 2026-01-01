@@ -27,7 +27,7 @@ import jakarta.persistence.Table;
 @AllArgsConstructor
 @Table(name = "users",
     indexes = {
-        @Index(name = "idx_user_email", columnList = "email", unique = true),
+        @Index(name = "idx_user_username", columnList = "username", unique = true),
         @Index(name = "idx_user_deleted_at", columnList = "deleted_at")
     }
 )
@@ -39,9 +39,8 @@ public class User {
     String name;
 
     @Column(unique = true)
-    String email;
-    String passwordHash;
-    String avatarUrl;
+    String username;
+    String password;
 
     @CreationTimestamp
     Instant createdAt;

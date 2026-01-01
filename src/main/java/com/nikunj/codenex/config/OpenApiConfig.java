@@ -99,7 +99,7 @@ public class OpenApiConfig {
                         .description("Map of field names to list of validation error messages")
                         .additionalProperties(new ArraySchema().items(new StringSchema()))
                         .example(Map.of(
-                                "email", List.of("must be a valid email address"),
+                                "username", List.of("must be a valid email address"),
                                 "password", List.of("size must be between 4 and 50"))))
                 .addRequiredItem("status")
                 .addRequiredItem("error")

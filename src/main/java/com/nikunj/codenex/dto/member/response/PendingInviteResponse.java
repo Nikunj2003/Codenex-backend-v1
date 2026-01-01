@@ -8,7 +8,7 @@ public record PendingInviteResponse(
         String projectName,
         Long ownerId,
         String ownerName,
-        String ownerEmail,
+        String ownerUsername,
         ProjectRole role,
         Instant invitedAt) {
 }

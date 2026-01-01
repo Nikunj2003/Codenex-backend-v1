@@ -14,7 +14,7 @@ import java.time.Instant;
 public interface ProjectMemberMapper {
 
     @Mapping(source = "user.id", target = "userId")
-    @Mapping(source = "user.email", target = "email")
+    @Mapping(source = "user.username", target = "username")
     @Mapping(source = "user.name", target = "name")
     @Mapping(source = "projectRole", target = "projectRole")
     @Mapping(source = "acceptedAt", target = "acceptedAt")
@@ -25,7 +25,7 @@ public interface ProjectMemberMapper {
     @Mapping(source = "projectMember.project.name", target = "projectName")
     @Mapping(source = "ownerMember.user.id", target = "ownerId")
     @Mapping(source = "ownerMember.user.name", target = "ownerName")
-    @Mapping(source = "ownerMember.user.email", target = "ownerEmail")
+    @Mapping(source = "ownerMember.user.username", target = "ownerUsername")
     @Mapping(source = "projectMember.projectRole", target = "role")
     @Mapping(source = "projectMember.invitedAt", target = "invitedAt")
     PendingInviteResponse toPendingInviteResponse(ProjectMember projectMember, ProjectMember ownerMember);

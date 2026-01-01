@@ -64,8 +64,8 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
             throw new ForbiddenException("Only the project owner can invite members");
         }
 
-        User invitee = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new ResourceNotFoundException("User", request.email()));
+        User invitee = userRepository.findByUsername(request.username())
+                .orElseThrow(() -> new ResourceNotFoundException("User", request.username()));
 
         if (invitee.getId().equals(userId)) {
             throw new BadRequestException("You cannot invite yourself to the project");

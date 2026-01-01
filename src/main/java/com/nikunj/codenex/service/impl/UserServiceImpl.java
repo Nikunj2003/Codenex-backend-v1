@@ -14,6 +14,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserProfileResponse getProfile(Long userId) {
         // TODO: Implement actual user retrieval logic
-        return new UserProfileResponse(userId, "Test User", "test@example.com", null);
+        return new UserProfileResponse(userId, "Test User", "test@example.com");
     }
 }
